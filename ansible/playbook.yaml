@@ -1,0 +1,46 @@
+- hosts: localhost
+  tasks:
+    - name: Create monitoring namespace
+      k8s:
+        kubeconfig: /path/to/kubeconfig
+        name: monitoring
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Add or update the Helm repo
+      community.kubernetes.helm_repository:
+        kubeconfig: /path/to/kubeconfig
+        name: prometheus-community
+        repo_url: https://prometheus-community.github.io/helm-charts
+
+    - name: Install or upgrade Prometheus chart
+      community.kubernetes.helm:
+        kubeconfig: /path/to/kubeconfig
+        name: prometheus
+        namespace: monitoring
+        chart_ref: prometheus-community/prometheus
+        chart_version: 11.16.8
+        release_values:
+          server:
+            service:
+              type: LoadBalancer
+
+    - name: Add or update the Helm repo
+      community.kubernetes.helm_repository:
+        kubeconfig: /path/to/kubeconfig
+        name: grafana
+        repo_url: https://grafana.github.io/helm-charts
+
+    - name: Install or upgrade Grafana chart
+      community.kubernetes.helm:
+        kubeconfig: /path/to/kubeconfig
+        name: grafana
+        namespace: monitoring
+        chart_ref: grafana/grafana
+        chart_version: 6.6.4
+        release_values:
+          service:
+            type: LoadBalancer
+          adminPassword: "admin"
+
